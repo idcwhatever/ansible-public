@@ -1,0 +1,11 @@
+- name: Restart snapclient
+  ansible.builtin.service:
+    name: snapclient
+    state: restarted
+  become: true
+
+- name: Restart systemd journald
+  ansible.builtin.service:
+    name: systemd-journald
+    state: restarted
+  become: true

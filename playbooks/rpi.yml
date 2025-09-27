@@ -1,0 +1,74 @@
+---
+- name: Configures all hosts
+  tags: common
+  hosts: all
+  tasks:
+    - name: Configure ssh authorized keys
+      ansible.posix.authorized_key:
+        user: "{{ user }}"
+        exclusive: true
+        key: "{{ ssh_authorized_keys | join('\n') }}"
+      when: ssh_authorized_keys != None and ssh_authorized_keys | length > 0
+
+- name: Configures kitchen pi
+  tags: common
+  hosts: kitchen_pi
+  tasks:
+    - name: Mount up device by UUID
+      ansible.posix.mount:
+        path: /mnt/share
+        src: UUID=394bcd8a-281d-4c0b-ad20-00e1d06844af
+        fstype: ext4
+        state: mounted
+        passno: 2
+      become: true
+    - name: Disable wifi
+      ansible.builtin.lineinfile:
+        path: /boot/firmware/config.txt
+        regexp: 'dtoverlay=disable-wifi'
+        line: dtoverlay=disable-wifi
+      notify: Restart
+      become: true
+    - name: Disable bluetooth
+      ansible.builtin.lineinfile:
+        path: /boot/firmware/config.txt
+        regexp: 'dtoverlay=disable-bt'
+        line: dtoverlay=disable-bt
+      notify: Restart
+      become: true
+  handlers:
+    - name: Restart
+      ansible.builtin.reboot:
+      become: true
+
+- name: Configures all rpis
+  tags: common
+  hosts: kitchen_pi
+  tasks:
+    - name: Remove dphys-swapfile
+      ansible.builtin.package:
+        name: dphys-swapfile
+        state: absent
+      become: true
+    - name: Create sysctl directory
+      ansible.builtin.file:
+        path: /etc/sysctl.d
+        state: directory
+        mode: u=rwx,g=rx,o=rx
+      become: true
+    - name: Set sysctl
+      ansible.posix.sysctl:
+        sysctl_file: /etc/sysctl.d/rpi.conf
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+      loop: "{{ sysctl_vars }}"
+      become: true
+
+- name: Configures all rpis roles
+  tags: roles
+  hosts: kitchen_pi
+  roles:
+    - snapclient
+    - zram
+    - log2ram
