@@ -77,7 +77,7 @@
   become: true
 
 - name: Enable and start log2ram
-  ansible.builtin.service:
+  ansible.builtin.systemd_service:
     name: log2ram
     state: started
     enabled: true

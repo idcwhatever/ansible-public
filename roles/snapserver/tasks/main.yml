@@ -13,8 +13,9 @@
 
       [stream]
       source = pipe:///tmp/snapfifo?name=bluetooth&mode=read&sampleformat=48000:16:2
+      source = pipe:///tmp/snapfifo_local?name=local&mode=read&sampleformat=48000:16:2
       source = tcp://0.0.0.0:4711?name=tcp&mode=server
-      source = meta:///bluetooth/tcp?name=combined
+      source = meta:///bluetooth/local/tcp?name=combined
 
       sampleformat = 48000:16:2
       codec = flac
@@ -44,7 +45,7 @@
     - 1780
 
 - name: Enable and start snapserver
-  ansible.builtin.service:
+  ansible.builtin.systemd_service:
     name: snapserver
     state: started
     enabled: true

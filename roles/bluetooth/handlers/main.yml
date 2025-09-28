@@ -1,11 +1,13 @@
-- name: Restart log2ram
+- name: Restart pulseaudio
   ansible.builtin.systemd_service:
-    name: log2ram
+    name: pulseaudio
     state: restarted
+    scope: user
   become: true
+  become_user: "{{ user }}"
 
-- name: Restart systemd journald
+- name: Restart bluetooth
   ansible.builtin.systemd_service:
-    name: systemd-journald
+    name: bluetooth
     state: restarted
   become: true

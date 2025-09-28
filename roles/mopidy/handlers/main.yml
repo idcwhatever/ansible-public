@@ -1,5 +1,5 @@
 - name: Restart mopidy
-  ansible.builtin.service:
+  ansible.builtin.systemd_service:
     name: mopidy
     state: restarted
   become: true

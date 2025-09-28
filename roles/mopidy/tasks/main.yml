@@ -28,6 +28,9 @@
       [file]
       enabled = false
 
+      [audio]
+      output = audioresample ! audioconvert ! audio/x-raw,rate=48000,channels=2,format=S16LE ! wavenc ! filesink location=/tmp/snapfifo_local
+
       [http]
       enabled = true
       hostname = 0.0.0.0
@@ -51,7 +54,7 @@
     - 6680
 
 - name: Enable and start mopidy
-  ansible.builtin.service:
+  ansible.builtin.systemd_service:
     name: mopidy
     state: started
     enabled: true

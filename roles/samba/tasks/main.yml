@@ -24,7 +24,7 @@
   become: true
 
 - name: Enable and start smbd
-  ansible.builtin.service:
+  ansible.builtin.systemd_service:
     name: smbd
     state: started
     enabled: true

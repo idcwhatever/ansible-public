@@ -1,0 +1,81 @@
+- name: Install pulseaudio
+  ansible.builtin.package:
+    name:
+      - pulseaudio
+      - pulseaudio-module-bluetooth
+    state: present
+  become: true
+
+- name: Create autologin directory
+  ansible.builtin.file:
+    path: /etc/systemd/system/getty@tty1.service.d
+    state: directory
+    mode: u=rwx,g=rx,o=rx
+  become: true
+
+- name: Add autologin
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/getty@tty1.service.d/autologin.conf
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=-/sbin/agetty --autologin "{{ user }}" --noclear %I $TERM
+    mode: u=rw,g=r,o=r
+  become: true
+  register: bluetooth_autologin
+
+- name: Restart after adding autologin
+  ansible.builtin.reboot:
+  become: true
+  when: bluetooth_autologin is changed # noqa: no-handler
+
+- name: Edit bluetooth configuration file to allow discoverability
+  ansible.builtin.lineinfile:
+    path: /etc/bluetooth/main.conf
+    regexp: 'DiscoverableTimeout ='
+    line: DiscoverableTimeout = 0
+  notify: Restart bluetooth
+  become: true
+
+- name: Create pulseaudio snapcast config
+  ansible.builtin.copy:
+    dest: /etc/pulse/default.pa.d/snapcast.pa
+    content: |
+      load-module module-pipe-sink file=/tmp/snapfifo sink_name=Snapcast format=s16le rate=48000
+      set-default-sink Snapcast
+    mode: u=rw,g=r,o=r
+  notify: Restart pulseaudio
+  become: true
+
+- name: Enable and start pulseaudio
+  ansible.builtin.systemd_service:
+    name: pulseaudio
+    state: started
+    enabled: true
+    scope: user
+  become: true
+  become_user: "{{ user }}"
+
+- name: Set bluetooth discoverable # noqa: no-changed-when
+  ansible.builtin.command: bluetoothctl discoverable on
+  become: true
+  become_user: "{{ user }}"
+  check_mode: false
+
+- name: Set bluetooth pairable # noqa: no-changed-when
+  ansible.builtin.command: bluetoothctl pairable on
+  become: true
+  become_user: "{{ user }}"
+  check_mode: false
+
+- name: Set bluetooth agent off # noqa: no-changed-when
+  ansible.builtin.command: bluetoothctl agent off
+  become: true
+  become_user: "{{ user }}"
+  check_mode: false
+
+- name: Set bluetooth agent KeyboardOnly  # noqa: no-changed-when
+  ansible.builtin.command: bluetoothctl agent KeyboardOnly
+  become: true
+  become_user: "{{ user }}"
+  check_mode: false

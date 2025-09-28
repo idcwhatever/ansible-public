@@ -117,4 +117,5 @@
   hosts: tv_pi
   roles:
     - snapserver
+    - bluetooth
     - mopidy
