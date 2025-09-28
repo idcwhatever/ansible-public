@@ -3,3 +3,9 @@
     name: log2ram
     state: restarted
   become: true
+
+- name: Restart systemd journald
+  ansible.builtin.service:
+    name: systemd-journald
+    state: restarted
+  become: true

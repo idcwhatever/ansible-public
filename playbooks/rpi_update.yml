@@ -1,6 +1,6 @@
 ---
 - name: Configures all rpis
-  hosts: kitchen_pi
+  hosts: kitchen_pi,tv_pi
   tasks:
     - name: Update all packages to their latest version # noqa: package-latest
       ansible.builtin.apt:

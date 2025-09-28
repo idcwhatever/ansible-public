@@ -24,6 +24,13 @@
   when: zram_package_installed is changed or zram_config_updated is changed
   become: true
 
+- name: Disable zramswap
+  ansible.builtin.service:
+    name: zramswap
+    state: stopped
+    enabled: false
+  become: true
+
 - name: Enable and start zram0
   ansible.builtin.service:
     name: systemd-zram-setup@zram0.service

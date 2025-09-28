@@ -1,7 +1,7 @@
 ---
 - name: Configures all rpis
   tags: common
-  hosts: kitchen_pi
+  hosts: kitchen_pi,tv_pi
   tasks:
     - name: Configure ssh authorized keys
       ansible.posix.authorized_key:
@@ -47,7 +47,7 @@
   tags: common
   hosts: kitchen_pi
   tasks:
-    - name: Mount up device by UUID
+    - name: Mount NAS drive
       ansible.posix.mount:
         path: /mnt/share
         src: UUID=394bcd8a-281d-4c0b-ad20-00e1d06844af
@@ -74,9 +74,33 @@
       ansible.builtin.reboot:
       become: true
 
+- name: Configures tv pi
+  tags: common
+  hosts: tv_pi
+  tasks:
+    - name: Mount samba share
+      ansible.posix.mount:
+        path: /mnt/share
+        src: //kitchen-pi.local/share
+        fstype: cifs
+        state: mounted
+        opts: guest,_netdev,x-systemd.automount
+      become: true
+    - name: Disable wifi
+      ansible.builtin.lineinfile:
+        path: /boot/firmware/config.txt
+        regexp: 'dtoverlay=disable-wifi'
+        line: dtoverlay=disable-wifi
+      notify: Restart
+      become: true
+  handlers:
+    - name: Restart
+      ansible.builtin.reboot:
+      become: true
+
 - name: Configures all rpis roles
   tags: roles
-  hosts: kitchen_pi
+  hosts: kitchen_pi,tv_pi
   roles:
     - snapclient
     - zram
