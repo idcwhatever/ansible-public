@@ -45,17 +45,6 @@
   notify: Restart bluetooth
   become: true
 
-- name: Create pulseaudio snapcast config
-  ansible.builtin.copy:
-    dest: /etc/pulse/default.pa.d/snapcast.pa
-    content: |
-      load-module module-pipe-sink file=/tmp/snapfifo sink_name=Snapcast format=s16le rate=48000
-      load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1
-      set-default-sink Snapcast
-    mode: u=rw,g=r,o=r
-  notify: Restart pulseaudio
-  become: true
-
 - name: Enable and start pulseaudio
   ansible.builtin.systemd_service:
     name: pulseaudio
@@ -65,26 +54,17 @@
   become: true
   become_user: "{{ user }}"
 
-- name: Set bluetooth discoverable # noqa: no-changed-when
+- name: Get bluetooth status
+  ansible.builtin.command: bluetoothctl show
+  changed_when: false
+  register: bluetooth_status
+  become: true
+  become_user: "{{ user }}"
+
+- name: Set bluetooth discoverable
   ansible.builtin.command: bluetoothctl discoverable on
+  when: "'Discoverable: no' in bluetooth_status.stdout"
+  changed_when: true
+  check_mode: false
   become: true
   become_user: "{{ user }}"
-  check_mode: false
-
-- name: Set bluetooth pairable # noqa: no-changed-when
-  ansible.builtin.command: bluetoothctl pairable on
-  become: true
-  become_user: "{{ user }}"
-  check_mode: false
-
-- name: Set bluetooth agent off # noqa: no-changed-when
-  ansible.builtin.command: bluetoothctl agent off
-  become: true
-  become_user: "{{ user }}"
-  check_mode: false
-
-- name: Set bluetooth agent KeyboardOnly  # noqa: no-changed-when
-  ansible.builtin.command: bluetoothctl agent KeyboardOnly
-  become: true
-  become_user: "{{ user }}"
-  check_mode: false

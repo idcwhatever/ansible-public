@@ -1,6 +1,8 @@
 - name: Install samba
   ansible.builtin.package:
-    name: samba
+    name:
+      - samba
+      - smbclient
     state: present
   become: true
 
@@ -28,4 +30,41 @@
     name: smbd
     state: started
     enabled: true
+  become: true
+
+- name: Create users
+  ansible.builtin.user:
+    name: "{{ item.username }}"
+    create_home: false
+    shell: /usr/sbin/nologin
+  loop: "{{ samba_users }}"
+  no_log: true
+  become: true
+
+- name: Create samba users
+  ansible.builtin.shell: >
+    set -e -o pipefail
+    && (pdbedit --user='{{ item.username }}' 2>&1 > /dev/null)
+    || (echo '{{ item.password }}'; echo '{{ item.password }}')
+    | smbpasswd -s -a '{{ item.username }}'
+  args:
+    executable: /bin/bash
+  register: samba_create_users
+  changed_when: "'Added user' in samba_create_users.stdout"
+  loop: "{{ samba_users }}"
+  no_log: true
+  become: true
+
+- name: Set samba passwords
+  ansible.builtin.shell: >
+    set -e -o pipefail
+    && (smbclient -U '{{ item.username }}'%'{{ item.password }}' -L 127.0.0.1 2>&1 > /dev/null)
+    || (echo '{{ item.password }}'; echo '{{ item.password }}')
+    | smbpasswd '{{ item.username }}'
+  args:
+    executable: /bin/bash
+  register: samba_verify_users
+  changed_when: "'New SMB password' in samba_verify_users.stdout"
+  loop: "{{ samba_users }}"
+  no_log: true
   become: true

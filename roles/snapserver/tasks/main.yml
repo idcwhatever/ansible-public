@@ -13,9 +13,8 @@
 
       [stream]
       source = pipe:///tmp/snapfifo?name=bluetooth&mode=read&sampleformat=48000:16:2
-      source = pipe:///tmp/snapfifo_local?name=local&mode=read&sampleformat=48000:16:2
       source = tcp://0.0.0.0:4711?name=tcp&mode=server
-      source = meta:///bluetooth/local/tcp?name=combined
+      source = meta:///bluetooth/tcp?name=combined
 
       sampleformat = 48000:16:2
       codec = flac
@@ -43,6 +42,16 @@
     - 1704
     - 1705
     - 1780
+
+- name: Create pulseaudio snapcast config
+  ansible.builtin.copy:
+    dest: /etc/pulse/default.pa.d/snapcast.pa
+    content: |
+      load-module module-pipe-sink file=/tmp/snapfifo sink_name=Snapcast format=s16le rate=48000
+      set-default-sink Snapcast
+    mode: u=rw,g=r,o=r
+  notify: Restart pulseaudio
+  become: true
 
 - name: Enable and start snapserver
   ansible.builtin.systemd_service:
