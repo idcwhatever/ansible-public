@@ -10,7 +10,7 @@ pactl subscribe | while read x event y type num; do
         if [[ "$bluez_source" != "false" ]]
         then
             echo "Loading loopback module for source $num"
-            pactl load-module module-loopback latency_msec=1000 source="$source_number" sink=Snapcast
+            pactl load-module module-loopback latency_msec=1000 source="$source_number" sink=$(pactl get-default-sink)
         fi
     fi
 
