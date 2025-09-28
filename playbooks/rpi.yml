@@ -9,6 +9,12 @@
         exclusive: true
         key: "{{ ssh_authorized_keys | join('\n') }}"
       when: ssh_authorized_keys != None and ssh_authorized_keys | length > 0
+    - name: Install packages
+      ansible.builtin.package:
+        name:
+          - vim
+        state: present
+      become: true
     - name: Remove dphys-swapfile
       ansible.builtin.package:
         name: dphys-swapfile
