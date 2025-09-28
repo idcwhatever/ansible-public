@@ -1,0 +1,5 @@
+- name: Restart snapserver
+  ansible.builtin.service:
+    name: snapserver
+    state: restarted
+  become: true

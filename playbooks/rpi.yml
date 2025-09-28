@@ -111,3 +111,9 @@
   hosts: kitchen_pi
   roles:
     - samba
+
+- name: Configures tv_pi roles
+  tags: roles
+  hosts: tv_pi
+  roles:
+    - snapserver

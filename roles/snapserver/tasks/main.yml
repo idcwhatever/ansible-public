@@ -1,0 +1,51 @@
+- name: Install snapserver
+  ansible.builtin.package:
+    name: snapserver
+    state: present
+  become: true
+
+- name: Add configuration file
+  ansible.builtin.copy:
+    dest: /etc/snapserver.conf
+    content: |
+      [http]
+      doc_root = /usr/share/snapweb
+
+      [stream]
+      source = pipe:///tmp/snapfifo?name=bluetooth&mode=read&sampleformat=48000:16:2
+      source = tcp://0.0.0.0:4711?name=tcp&mode=server
+      source = meta:///bluetooth/tcp?name=combined
+
+      sampleformat = 48000:16:2
+      codec = flac
+      chunk_ms = 30
+      buffer = 400
+
+    mode: u=rw,g=r,o=r
+  notify: Restart snapserver
+  become: true
+
+- name: Install snapweb
+  ansible.builtin.apt:
+    deb: https://github.com/badaix/snapweb/releases/download/v0.9.1/snapweb_0.9.1-1_all.deb
+  notify: Restart snapserver
+  become: true
+
+- name: Allow snapserver in ufw
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  become: true
+  loop:
+    - 4711
+    - 1704
+    - 1705
+    - 1780
+
+- name: Enable and start snapserver
+  ansible.builtin.service:
+    name: snapserver
+    state: started
+    enabled: true
+  become: true
