@@ -45,6 +45,14 @@
   notify: Restart bluetooth
   become: true
 
+- name: Edit pulseaudio configuration to disable pulseaudio bluetooth module auto loading
+  ansible.builtin.lineinfile:
+    path: /etc/pulse/default.pa
+    regexp: 'load-module module-bluetooth-policy'
+    line: "#load-module module-bluetooth-policy"
+  notify: Restart pulseaudio
+  become: true
+
 - name: Enable and start pulseaudio
   ansible.builtin.systemd_service:
     name: pulseaudio
@@ -66,5 +74,36 @@
   when: "'Discoverable: no' in bluetooth_status.stdout"
   changed_when: true
   check_mode: false
+  become: true
+  become_user: "{{ user }}"
+
+- name: Add pactl service
+  ansible.builtin.copy:
+    dest: /etc/systemd/user/pactl-subscribe.service
+    src: pactl-subscribe.service
+    mode: u=rw,g=r,o=r
+  register: bluetooth_pactl_service
+  become: true
+
+- name: Reload daemon configuration
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when: bluetooth_pactl_service is changed # noqa: no-handler
+  become: true
+
+- name: Add pactl script
+  ansible.builtin.copy:
+    dest: /usr/local/bin/pactl_subscribe_script.sh
+    src: pactl_subscribe_script.sh
+    mode: u=rwx,g=rx,o=rx
+  notify: Restart pactl script
+  become: true
+
+- name: Enable and start pactl script
+  ansible.builtin.systemd_service:
+    name: pactl-subscribe
+    state: started
+    enabled: true
+    scope: user
   become: true
   become_user: "{{ user }}"

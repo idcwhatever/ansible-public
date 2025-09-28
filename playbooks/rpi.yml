@@ -116,6 +116,6 @@
   tags: roles
   hosts: tv_pi
   roles:
-    - snapserver
     - bluetooth
+    - snapserver
     - mopidy

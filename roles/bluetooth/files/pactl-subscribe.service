@@ -1,0 +1,11 @@
+[Unit]
+Description=Pactl Bluetooth Loopback script
+After=pulseaudio.service
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/bin/bash /usr/local/bin/pactl_subscribe_script.sh
+
+[Install]
+WantedBy=default.target
