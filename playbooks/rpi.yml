@@ -1,7 +1,7 @@
 ---
-- name: Configures all hosts
+- name: Configures all rpis
   tags: common
-  hosts: all
+  hosts: kitchen_pi
   tasks:
     - name: Configure ssh authorized keys
       ansible.posix.authorized_key:
@@ -9,6 +9,39 @@
         exclusive: true
         key: "{{ ssh_authorized_keys | join('\n') }}"
       when: ssh_authorized_keys != None and ssh_authorized_keys | length > 0
+    - name: Remove dphys-swapfile
+      ansible.builtin.package:
+        name: dphys-swapfile
+        state: absent
+      become: true
+    - name: Create sysctl directory
+      ansible.builtin.file:
+        path: /etc/sysctl.d
+        state: directory
+        mode: u=rwx,g=rx,o=rx
+      become: true
+    - name: Set sysctl
+      ansible.posix.sysctl:
+        sysctl_file: /etc/sysctl.d/rpi.conf
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+      loop: "{{ sysctl_vars }}"
+      become: true
+    - name: Install ufw
+      ansible.builtin.package:
+        name: ufw
+        state: present
+      become: true
+    - name: Allow ssh
+      community.general.ufw:
+        rule: allow
+        name: OpenSSH
+      become: true
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+      become: true
 
 - name: Configures kitchen pi
   tags: common
@@ -41,30 +74,6 @@
       ansible.builtin.reboot:
       become: true
 
-- name: Configures all rpis
-  tags: common
-  hosts: kitchen_pi
-  tasks:
-    - name: Remove dphys-swapfile
-      ansible.builtin.package:
-        name: dphys-swapfile
-        state: absent
-      become: true
-    - name: Create sysctl directory
-      ansible.builtin.file:
-        path: /etc/sysctl.d
-        state: directory
-        mode: u=rwx,g=rx,o=rx
-      become: true
-    - name: Set sysctl
-      ansible.posix.sysctl:
-        sysctl_file: /etc/sysctl.d/rpi.conf
-        name: "{{ item.name }}"
-        value: "{{ item.value }}"
-        state: present
-      loop: "{{ sysctl_vars }}"
-      become: true
-
 - name: Configures all rpis roles
   tags: roles
   hosts: kitchen_pi
@@ -72,3 +81,9 @@
     - snapclient
     - zram
     - log2ram
+
+- name: Configures kitchen_pi roles
+  tags: roles
+  hosts: kitchen_pi
+  roles:
+    - samba

@@ -1,0 +1,31 @@
+- name: Install samba
+  ansible.builtin.package:
+    name: samba
+    state: present
+  become: true
+
+- name: Configure smbd
+  ansible.builtin.copy:
+    dest: /etc/samba/smb.conf
+    content: |
+      [share]
+      path = /mnt/share
+      writeable = no
+      browseable = yes
+      public = yes
+    mode: u=rw,g=r,o=r
+  notify: Restart smbd
+  become: true
+
+- name: Allow samba in ufw
+  community.general.ufw:
+    rule: allow
+    name: Samba
+  become: true
+
+- name: Enable and start smbd
+  ansible.builtin.service:
+    name: smbd
+    state: started
+    enabled: true
+  become: true
