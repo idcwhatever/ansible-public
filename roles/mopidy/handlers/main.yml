@@ -1,0 +1,5 @@
+- name: Restart mopidy
+  ansible.builtin.service:
+    name: mopidy
+    state: restarted
+  become: true

@@ -117,3 +117,4 @@
   hosts: tv_pi
   roles:
     - snapserver
+    - mopidy
