@@ -37,11 +37,20 @@
   notify: Restart bluetooth
   become: true
 
+- name: Edit bluetooth configuration file to change class
+  ansible.builtin.lineinfile:
+    path: /etc/bluetooth/main.conf
+    regexp: 'Class ='
+    line: Class = 0x41C
+  notify: Restart bluetooth
+  become: true
+
 - name: Create pulseaudio snapcast config
   ansible.builtin.copy:
     dest: /etc/pulse/default.pa.d/snapcast.pa
     content: |
       load-module module-pipe-sink file=/tmp/snapfifo sink_name=Snapcast format=s16le rate=48000
+      load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1
       set-default-sink Snapcast
     mode: u=rw,g=r,o=r
   notify: Restart pulseaudio

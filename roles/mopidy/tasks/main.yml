@@ -20,6 +20,9 @@
   ansible.builtin.copy:
     dest: /etc/mopidy/mopidy.conf
     content: |
+      [core]
+      restore_state = true
+
       [local]
       enabled = true
       media_dir = /mnt/share/Music
@@ -29,7 +32,7 @@
       enabled = false
 
       [audio]
-      output = audioresample ! audioconvert ! audio/x-raw,rate=48000,channels=2,format=S16LE ! wavenc ! filesink location=/tmp/snapfifo_local
+      output = pulsesink server=127.0.0.1
 
       [http]
       enabled = true
@@ -42,6 +45,15 @@
 
     mode: u=rw,g=r,o=r
   notify: Restart mopidy
+  become: true
+
+- name: Create pulseaudio mopidy config
+  ansible.builtin.copy:
+    dest: /etc/pulse/default.pa.d/mopidy.pa
+    content: |
+      load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1
+    mode: u=rw,g=r,o=r
+  notify: Restart pulseaudio
   become: true
 
 - name: Allow mopidy in ufw
