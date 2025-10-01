@@ -1,5 +1,7 @@
----
+--- # noqa: run-once[play]
 - name: Configures all rpis
+  gather_facts: false
+  strategy: free
   tags: common
   hosts: kitchen_pi,tv_pi
   tasks:
@@ -50,6 +52,7 @@
       become: true
 
 - name: Configures kitchen pi
+  gather_facts: false
   tags: common
   hosts: kitchen_pi
   tasks:
@@ -80,7 +83,15 @@
       ansible.builtin.reboot:
       become: true
 
+- name: Create samba share on kitchen_pi
+  gather_facts: false
+  tags: roles
+  hosts: kitchen_pi
+  roles:
+    - samba
+
 - name: Configures tv pi
+  gather_facts: false
   tags: common
   hosts: tv_pi
   tasks:
@@ -104,24 +115,21 @@
       ansible.builtin.reboot:
       become: true
 
-- name: Configures all rpis roles
-  tags: roles
-  hosts: kitchen_pi,tv_pi
-  roles:
-    - snapclient
-    - zram
-    - log2ram
-
-- name: Configures kitchen_pi roles
-  tags: roles
-  hosts: kitchen_pi
-  roles:
-    - samba
-
 - name: Configures tv_pi roles
+  gather_facts: false
   tags: roles
   hosts: tv_pi
   roles:
     - bluetooth
     - snapserver
     - mopidy
+
+- name: Configures all rpis roles
+  gather_facts: false
+  strategy: free
+  tags: roles
+  hosts: kitchen_pi,tv_pi
+  roles:
+    - snapclient
+    - zram
+    - log2ram

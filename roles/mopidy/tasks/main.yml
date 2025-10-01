@@ -1,3 +1,19 @@
+- name: Install pulseaudio
+  ansible.builtin.package:
+    name:
+      - pulseaudio
+    state: present
+  become: true
+
+- name: Enable and start pulseaudio
+  ansible.builtin.systemd_service:
+    name: pulseaudio
+    state: started
+    enabled: true
+    scope: user
+  become: true
+  become_user: "{{ user }}"
+
 - name: Install mopidy
   ansible.builtin.package:
     name:
