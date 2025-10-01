@@ -40,11 +40,6 @@
 
       [stream]
       enabled = false
-
-      [iris]
-      snapcast_enabled = {{ "true" if mopidy_snapcast_host else "false" }}
-      snapcast_host = {{ mopidy_snapcast_host }}
-
     mode: u=rw,g=r,o=r
   notify: Restart mopidy
   become: true
