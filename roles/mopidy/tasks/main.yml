@@ -3,7 +3,6 @@
     name:
       - mopidy
       - mopidy-local
-      - mopidy-mpd
       - mopidy-doc
       - python3-pip
       - python3-standard-imghdr
@@ -38,10 +37,13 @@
       enabled = true
       hostname = 0.0.0.0
       port = 6680
-      allowed_origins = {{ mopidy_allowed_origin }}
 
       [stream]
       enabled = false
+
+      [iris]
+      snapcast_enabled = {{ "true" if mopidy_snapcast_host else "false" }}
+      snapcast_host = {{ mopidy_snapcast_host }}
 
     mode: u=rw,g=r,o=r
   notify: Restart mopidy
