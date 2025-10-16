@@ -2,7 +2,6 @@
   ansible.builtin.systemd_service:
     name: bluetooth
     state: restarted
-  become: true
 
 - name: Restart pulseaudio
   ansible.builtin.systemd_service:

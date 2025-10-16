@@ -3,7 +3,6 @@
     path: /etc/systemd/journald.conf.d
     state: directory
     mode: u=rwx,g=rx,o=rx
-  become: true
 
 - name: Configure journal
   ansible.builtin.copy:
@@ -14,14 +13,12 @@
       SystemMaxUse=50M
     mode: u=rw,g=r,o=r
   notify: Restart systemd journald
-  become: true
 
 - name: Remove configuration shipped by rpi
   ansible.builtin.file:
     path: /usr/lib/systemd/journald.conf.d/70-rpi-volatile-storage.conf
     state: absent
   notify: Restart systemd journald
-  become: true
 
 - name: Add apt repo
   ansible.builtin.copy:
@@ -29,7 +26,6 @@
     content: |
       deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ trixie main
     mode: u=rw,g=r,o=r
-  become: true
   register: log2ram_add_apt_repo
 
 - name: Download gpg key
@@ -37,20 +33,17 @@
     url: https://azlux.fr/repo.gpg
     dest: /usr/share/keyrings/azlux-archive-keyring.gpg
     mode: u=rw,g=r,o=r
-  become: true
   register: log2ram_download_gpg_key
 
 - name: Update apt
   ansible.builtin.apt:
     update_cache: true
-  become: true
   when: log2ram_add_apt_repo is changed or log2ram_download_gpg_key is changed
 
 - name: Install log2ram
   ansible.builtin.package:
     name: log2ram
     state: present
-  become: true
 
 - name: Enable zram log disk
   ansible.builtin.lineinfile:
@@ -58,7 +51,6 @@
     regexp: '^ZL2R='
     line: ZL2R=true
   notify: Restart log2ram
-  become: true
 
 - name: Set zram log disk compression mode to zstd
   ansible.builtin.lineinfile:
@@ -66,7 +58,6 @@
     regexp: '^COMP_ALG='
     line: COMP_ALG=zstd
   notify: Restart log2ram
-  become: true
 
 - name: Set zram log disk size
   ansible.builtin.lineinfile:
@@ -74,11 +65,9 @@
     regexp: '^LOG_DISK_SIZE='
     line: LOG_DISK_SIZE={{ log2ram_disk_size }}
   notify: Restart log2ram
-  become: true
 
 - name: Enable and start log2ram
   ansible.builtin.systemd_service:
     name: log2ram
     state: started
     enabled: true
-  become: true

@@ -2,7 +2,6 @@
   ansible.builtin.package:
     name: snapclient
     state: present
-  become: true
 
 - name: Edit configuration file
   ansible.builtin.lineinfile:
@@ -10,11 +9,9 @@
     regexp: '^SNAPCLIENT_OPTS='
     line: SNAPCLIENT_OPTS="--host {{ snapclient_host }}"
   notify: Restart snapclient
-  become: true
 
 - name: Enable and start snapclient
   ansible.builtin.systemd_service:
     name: snapclient
     state: started
     enabled: true
-  become: true

@@ -4,14 +4,12 @@
       - pulseaudio
       - pulseaudio-module-bluetooth
     state: present
-  become: true
 
 - name: Create autologin directory
   ansible.builtin.file:
     path: /etc/systemd/system/getty@tty1.service.d
     state: directory
     mode: u=rwx,g=rx,o=rx
-  become: true
 
 - name: Add autologin
   ansible.builtin.copy:
@@ -21,12 +19,10 @@
       ExecStart=
       ExecStart=-/sbin/agetty --autologin "{{ user }}" --noclear %I $TERM
     mode: u=rw,g=r,o=r
-  become: true
   register: bluetooth_autologin
 
 - name: Restart after adding autologin
   ansible.builtin.reboot:
-  become: true
   when: bluetooth_autologin is changed # noqa: no-handler
 
 - name: Edit bluetooth configuration file to allow discoverability
@@ -35,7 +31,6 @@
     regexp: 'DiscoverableTimeout ='
     line: DiscoverableTimeout = 0
   notify: Restart bluetooth
-  become: true
 
 - name: Edit bluetooth configuration file to change class
   ansible.builtin.lineinfile:
@@ -43,7 +38,6 @@
     regexp: 'Class ='
     line: Class = 0x41C
   notify: Restart bluetooth
-  become: true
 
 - name: Edit pulseaudio configuration to disable pulseaudio bluetooth module auto loading
   ansible.builtin.lineinfile:
@@ -51,7 +45,6 @@
     regexp: 'load-module module-bluetooth-policy'
     line: "#load-module module-bluetooth-policy"
   notify: Restart pulseaudio
-  become: true
 
 - name: Enable and start pulseaudio
   ansible.builtin.systemd_service:
@@ -83,13 +76,11 @@
     src: pactl-subscribe.service
     mode: u=rw,g=r,o=r
   register: bluetooth_pactl_service
-  become: true
 
 - name: Reload daemon configuration
   ansible.builtin.systemd_service:
     daemon_reload: true
   when: bluetooth_pactl_service is changed # noqa: no-handler
-  become: true
 
 - name: Add pactl script
   ansible.builtin.copy:
@@ -97,7 +88,6 @@
     src: pactl_subscribe_script.sh
     mode: u=rwx,g=rx,o=rx
   notify: Restart pactl script
-  become: true
 
 - name: Enable and start pactl script
   ansible.builtin.systemd_service:

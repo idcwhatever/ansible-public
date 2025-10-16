@@ -1,7 +1,6 @@
---- # noqa: run-once[play]
+---
 - name: Configures all rpis
   gather_facts: false
-  strategy: free
   tags: common
   hosts: kitchen_pi,tv_pi
   tasks:
@@ -16,18 +15,15 @@
         name:
           - vim
         state: present
-      become: true
     - name: Remove dphys-swapfile
       ansible.builtin.package:
         name: dphys-swapfile
         state: absent
-      become: true
     - name: Create sysctl directory
       ansible.builtin.file:
         path: /etc/sysctl.d
         state: directory
         mode: u=rwx,g=rx,o=rx
-      become: true
     - name: Set sysctl
       ansible.posix.sysctl:
         sysctl_file: /etc/sysctl.d/rpi.conf
@@ -35,21 +31,17 @@
         value: "{{ item.value }}"
         state: present
       loop: "{{ sysctl_vars }}"
-      become: true
     - name: Install ufw
       ansible.builtin.package:
         name: ufw
         state: present
-      become: true
     - name: Allow ssh
       community.general.ufw:
         rule: allow
         name: OpenSSH
-      become: true
     - name: Enable UFW
       community.general.ufw:
         state: enabled
-      become: true
 
 - name: Configures kitchen pi
   gather_facts: false
@@ -63,32 +55,29 @@
         fstype: ext4
         state: mounted
         passno: 2
-      become: true
     - name: Disable wifi
       ansible.builtin.lineinfile:
         path: /boot/firmware/config.txt
         regexp: 'dtoverlay=disable-wifi'
         line: dtoverlay=disable-wifi
       notify: Restart
-      become: true
     - name: Disable bluetooth
       ansible.builtin.lineinfile:
         path: /boot/firmware/config.txt
         regexp: 'dtoverlay=disable-bt'
         line: dtoverlay=disable-bt
       notify: Restart
-      become: true
   handlers:
     - name: Restart
       ansible.builtin.reboot:
-      become: true
 
 - name: Create samba share on kitchen_pi
   gather_facts: false
   tags: roles
   hosts: kitchen_pi
   roles:
-    - samba
+    - role: samba
+      tags: samba
 
 - name: Configures tv pi
   gather_facts: false
@@ -102,34 +91,36 @@
         fstype: cifs
         state: mounted
         opts: guest,_netdev,x-systemd.automount
-      become: true
     - name: Disable wifi
       ansible.builtin.lineinfile:
         path: /boot/firmware/config.txt
         regexp: 'dtoverlay=disable-wifi'
         line: dtoverlay=disable-wifi
       notify: Restart
-      become: true
   handlers:
     - name: Restart
       ansible.builtin.reboot:
-      become: true
 
 - name: Configures tv_pi roles
   gather_facts: false
   tags: roles
   hosts: tv_pi
   roles:
-    - bluetooth
-    - snapserver
-    - mopidy
+    - role: bluetooth
+      tags: bluetooth
+    - role: snapserver
+      tags: snapserver
+    - role: mopidy
+      tags: mopidy
 
 - name: Configures all rpis roles
   gather_facts: false
-  strategy: free
   tags: roles
   hosts: kitchen_pi,tv_pi
   roles:
-    - snapclient
-    - zram
-    - log2ram
+    - role: snapclient
+      tags: snapclient
+    - role: zram
+      tags: zram
+    - role: log2ram
+      tags: log2ram

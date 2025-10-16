@@ -4,7 +4,6 @@
       - samba
       - smbclient
     state: present
-  become: true
 
 - name: Configure smbd
   ansible.builtin.copy:
@@ -17,20 +16,17 @@
       public = yes
     mode: u=rw,g=r,o=r
   notify: Restart smbd
-  become: true
 
 - name: Allow samba in ufw
   community.general.ufw:
     rule: allow
     name: Samba
-  become: true
 
 - name: Enable and start smbd
   ansible.builtin.systemd_service:
     name: smbd
     state: started
     enabled: true
-  become: true
 
 - name: Create users
   ansible.builtin.user:
@@ -39,7 +35,6 @@
     shell: /usr/sbin/nologin
   loop: "{{ samba_users }}"
   no_log: true
-  become: true
 
 - name: Create samba users
   ansible.builtin.shell: >
@@ -53,7 +48,6 @@
   changed_when: "'Added user' in samba_create_users.stdout"
   loop: "{{ samba_users }}"
   no_log: true
-  become: true
 
 - name: Set samba passwords
   ansible.builtin.shell: >
@@ -67,4 +61,3 @@
   changed_when: "'New SMB password' in samba_verify_users.stdout"
   loop: "{{ samba_users }}"
   no_log: true
-  become: true

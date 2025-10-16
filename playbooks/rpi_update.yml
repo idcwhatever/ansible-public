@@ -6,4 +6,3 @@
       ansible.builtin.apt:
         name: "*"
         state: latest
-      become: true

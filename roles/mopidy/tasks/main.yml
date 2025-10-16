@@ -3,7 +3,6 @@
     name:
       - pulseaudio
     state: present
-  become: true
 
 - name: Enable and start pulseaudio
   ansible.builtin.systemd_service:
@@ -23,13 +22,11 @@
       - python3-pip
       - python3-standard-imghdr
     state: present
-  become: true
 
 - name: Install Mopidy-Iris python package
   ansible.builtin.pip:
     name: Mopidy-Iris
     break_system_packages: true
-  become: true
 
 - name: Add configuration file
   ansible.builtin.copy:
@@ -58,7 +55,6 @@
       enabled = false
     mode: u=rw,g=r,o=r
   notify: Restart mopidy
-  become: true
 
 - name: Create pulseaudio mopidy config
   ansible.builtin.copy:
@@ -67,14 +63,12 @@
       load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1
     mode: u=rw,g=r,o=r
   notify: Restart pulseaudio
-  become: true
 
 - name: Allow mopidy in ufw
   community.general.ufw:
     rule: allow
     port: "{{ item }}"
     proto: tcp
-  become: true
   loop:
     - 6680
 
@@ -83,4 +77,3 @@
     name: mopidy
     state: started
     enabled: true
-  become: true
