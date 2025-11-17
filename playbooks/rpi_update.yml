@@ -4,5 +4,6 @@
   tasks:
     - name: Update all packages to their latest version # noqa: package-latest
       ansible.builtin.apt:
+        update_cache: true
         name: "*"
         state: latest
